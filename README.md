@@ -23,13 +23,13 @@
 
 リポジトリをクローンします：
 ```bash
-  git clone https://github.com/Cola0912/3dp-webcam-detection.git
-  cd 3dp-webcam-detection
+git clone https://github.com/Cola0912/3dp-webcam-detection.git
+cd 3dp-webcam-detection
 ```
 
 依存関係をインストールします：
 ```bash
-  pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 
