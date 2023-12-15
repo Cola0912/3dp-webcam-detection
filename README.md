@@ -25,7 +25,6 @@
 
 git clone https://github.com/Cola0912/3dp-webcam-detection.git
 
-Copy code
 
 依存関係をインストールします：
 
