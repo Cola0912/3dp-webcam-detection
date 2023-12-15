@@ -22,20 +22,23 @@
 ## インストール
 
 リポジトリをクローンします：
-
-git clone https://github.com/Cola0912/3dp-webcam-detection.git
-
+```bash
+  git clone https://github.com/Cola0912/3dp-webcam-detection.git
+  cd 3dp-webcam-detection
+```
 
 依存関係をインストールします：
-
-pip install -r requirements.txt
+```bash
+  pip install -r requirements.txt
+```
 
 
 ## 使い方
 
 スクリプトを実行するには、以下のコマンドを使用します：
+```bash
 python3 nozzle_detection.py
-
+```
 
 ## ライセンス
 
