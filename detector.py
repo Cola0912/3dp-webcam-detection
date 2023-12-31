@@ -2,17 +2,20 @@ import cv2
 import numpy as np
 from sklearn.linear_model import LinearRegression
 import math
-import matplotlib.pyplot as plt
 import argparse
 
 def process_image(image):
     # ガウシアンぼかしを適用
-    blurred_image = cv2.GaussianBlur(image, (7, 7), 0)
-    sharpened_image = cv2.filter2D(blurred_image, -1, np.array([[-1, -1, -1],
-                                                               [-1, 9.5, -1],
-                                                               [-1, -1, -1]]))
-    gray_image = cv2.cvtColor(sharpened_image, cv2.COLOR_BGR2GRAY)
-    hsv_image = cv2.cvtColor(sharpened_image, cv2.COLOR_BGR2HSV)
+    # blurred_image = cv2.GaussianBlur(image, (7, 7), 0)
+    # sharpened_image = cv2.filter2D(blurred_image, -1, np.array([[-1, -1, -1],
+    #                                                            [-1, 9.5, -1],
+    #                                                            [-1, -1, -1]]))
+    #gray_image = cv2.cvtColor(sharpened_image, cv2.COLOR_BGR2GRAY)
+    #hsv_image = cv2.cvtColor(sharpened_image, cv2.COLOR_BGR2HSV)
+    #_, binary_image = cv2.threshold(gray_image, 100, 255, cv2.THRESH_BINARY)
+
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     _, binary_image = cv2.threshold(gray_image, 100, 255, cv2.THRESH_BINARY)
 
     # 色範囲の定義
@@ -35,6 +38,11 @@ def process_image(image):
     contours_red, _ = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours_wakakusa, _ = cv2.findContours(wakakusa_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+    nozzle_position = None
+    print_surface = None
+    m = None
+    c = None
+
     # ノズル（赤色三角形）の位置を特定
     if contours_red:
         largest_red_contour = max(contours_red, key=cv2.contourArea)
@@ -46,7 +54,6 @@ def process_image(image):
             if M["m00"] != 0:
                 cx = int(M["m10"] / M["m00"])
                 cy = int(M["m01"] / M["m00"])
-                nozzle_position = (cx, cy)
                 
                 # Calculate edge lengths and the longest edge
                 edge_lengths = [calculate_distance(approximation[i][0], approximation[(i + 1) % 3][0]) for i in range(3)]
@@ -57,18 +64,18 @@ def process_image(image):
                 offset_y = min_offset_y + (max_offset_y - min_offset_y) * (longest_edge - min_edge_length) / (max_edge_length - min_edge_length)
                 nozzle_position = (cx + int(offset_x), cy + int(offset_y))
                 cv2.circle(image, nozzle_position, 10, (255, 0, 0), -1)  # Mark nozzle position
+
+                # Draw the detected triangle
+                cv2.drawContours(image, [approximation], 0, (0, 255, 0), 3)
             else:
-                nozzle_position = None
+                print("de:ノズルの位置を特定できませんでした。")
     else:
-        nozzle_position = None
+        print("de:ノズルの位置が検出されませんでした。")
 
     # 印刷平面（若草色）の位置を特定
     if contours_wakakusa:
         largest_wakakusa_contour = max(contours_wakakusa, key=cv2.contourArea)
-        # 最も高いY座標を持つポイントを見つける
         topmost = tuple(largest_wakakusa_contour[largest_wakakusa_contour[:,:,1].argmin()][0])
-
-        # Y座標が最も高いポイントから±10ピクセルの範囲にある輪郭ポイントを探す
         y_range = 10
         print_surface = [pt for pt in largest_wakakusa_contour if topmost[1] - y_range <= pt[0][1] <= topmost[1] + y_range]
 
@@ -80,7 +87,6 @@ def process_image(image):
         m = model.coef_[0]  # slope
         c = model.intercept_  # y-intercept
 
-        # 回帰直線を描画
         x_start = min(x)[0]
         x_end = max(x)[0]
         y_start = model.predict([[x_start]])[0]
@@ -90,18 +96,20 @@ def process_image(image):
         for pt in print_surface:
             cv2.circle(image, tuple(pt[0]), 2, (0, 0, 255), -1)  # Mark print surface points
     else:
-        print_surface = None
+        print("de:印刷平面が検出されませんでした。")
 
     # Calculate the distance between nozzle and print surface if both are detected
-    if nozzle_position and print_surface is not None:
+    if nozzle_position and print_surface is not None and m is not None:
         x0, y0 = nozzle_position
         distance = abs(m * x0 - y0 + c) / np.sqrt(m ** 2 + 1)  # Perpendicular distance
 
-        # Print warning based on the threshold
         if distance > threshold:
-            print(f"警告: ノズルの位置と印刷平面が離れすぎており、印刷が失敗している可能性があります。距離: {distance}")
+            print(f"de:警告 ノズルの位置と印刷平面が離れすぎており、印刷が失敗している可能性があります。距離: {distance}")
         else:
-            print("ノズルと印刷平面の距離は正常範囲内です。")
+            print(f"de:ノズルと印刷平面の距離は正常範囲内です。距離: {distance}")
+    elif nozzle_position is None or print_surface is None:
+        # Already handled above with appropriate messages.
+        pass
 
     return image
 
@@ -115,14 +123,12 @@ max_offset_x    = -190
 min_offset_x    = -85
 max_offset_y    = 150
 min_offset_y    = 55
-threshold       = 10 # ノズルと印刷平面との距離のしきい値　これより距離が遠ければ失敗してる可能性が高い。
-
-
+threshold       = 25  # ノズルと印刷平面との距離のしきい値
 
 def main(input_image_path, output_image_path):
     image = cv2.imread(input_image_path)
     if image is None:
-        print("画像が見つかりません。")
+        print("de:画像が見つかりません。")
         return
 
     processed_image = process_image(image)
