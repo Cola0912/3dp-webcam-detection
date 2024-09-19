@@ -1,0 +1,27 @@
+red_h_min_init = 0
+red_h_max_init = 180
+red_s_min_init = 227
+red_s_max_init = 255
+red_v_min_init = 82
+red_v_max_init = 255
+
+# 緑色の範囲初期値
+green_h_min_init = 55
+green_h_max_init = 100
+green_s_min_init = 109
+green_s_max_init = 255
+green_v_min_init = 24
+green_v_max_init = 255
+
+# 距離のしきい値初期値
+threshold_x_min_init = 25
+threshold_x_max_init = 25
+threshold_y_min_init = 30
+threshold_y_max_init = 30
+
+# 明るさと先鋭化の初期値
+brightness_init = 65  # 50〜150 (50=0.5, 150=1.5)
+sharpen_init = 0      # 0〜20 (10=1.0)
+
+# 緑色の輪郭面積のしきい値初期値
+green_area_threshold_init = 70  # 面積がこれ未満の輪郭を無視
