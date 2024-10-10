@@ -7,7 +7,7 @@ import sys
 
 # カメラの初期化
 camera_index = 4  # 使用するカメラのインデックスを指定
-cap = cv2.VideoCapture(camera_index)
+cap = cv2.VideoCapture('shorimae.webm')
 
 # プリンター固有の値（そのまま使用）
 min_edge_length = 116.18089343777659

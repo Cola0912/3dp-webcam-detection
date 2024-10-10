@@ -6,7 +6,7 @@ def nothing(x):
 
 # カメラの初期化
 camera_index = 4  # 使用するカメラのインデックスを指定
-cap = cv2.VideoCapture(camera_index)
+cap = cv2.VideoCapture('shorimae.webm')
 
 # ウィンドウの作成
 cv2.namedWindow('Frame')
